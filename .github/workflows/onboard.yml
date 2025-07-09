@@ -42,7 +42,7 @@ jobs:
         with:
           target_name: esp32
           num_commits: 2
-          build_script: source tools/ci.sh && ci_esp32_build_common && make -C ports/esp32 BOARD=ESP32_GENERIC
+          build_script: source tools/ci.sh && ci_esp32_build_cmod_spiram_s2
           elf: ports/esp32/build-ESP32_GENERIC/micropython.elf
           ld: ports/esp32/build-ESP32_GENERIC/esp-idf/esp_system/ld/memory.ld
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
