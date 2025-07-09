@@ -1,0 +1,48 @@
+name: Onboard to Membrowse
+
+on:
+  workflow_dispatch:
+
+jobs:
+  onboard:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Read ESP-IDF version
+        id: idf_ver
+        run: source tools/ci.sh && echo "IDF_VER=${IDF_VER}-py${PYTHON_VER}" | tee "$GITHUB_OUTPUT"
+      
+      - name: Cached ESP-IDF install
+        id: cache_esp_idf
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./esp-idf/
+            ~/.espressif/
+            !~/.espressif/dist/
+            ~/.cache/pip/
+          key: esp-idf-${{ steps.idf_ver.outputs.IDF_VER }}
+      
+      - name: Install ESP-IDF packages
+        if: steps.cache_esp_idf.outputs.cache-hit != 'true'
+        run: source tools/ci.sh && ci_esp32_idf_setup
+      
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: esp32-build
+      
+      - name: Run Membrowse Onboard Action
+        uses: membrowse/membrowse-action/onboard-action@main
+        with:
+          target_name: esp32
+          num_commits: 2
+          build_script: source esp-idf/export.sh && make -C mpy-cross && make -C ports/esp32 submodules && make -C ports/esp32
+          elf: ports/esp32/build-ESP32_GENERIC/micropython.elf
+          ld: ports/esp32/build-ESP32_GENERIC/esp-idf/esp_system/ld/memory.ld
+          api_key: ${{ secrets.MEMBROWSE_API_KEY }}
