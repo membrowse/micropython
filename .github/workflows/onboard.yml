@@ -13,36 +13,20 @@ jobs:
         with:
           fetch-depth: 0
       
-      - id: idf_ver
-        name: Read the ESP-IDF version (including Python version)
-        run: source tools/ci.sh && echo "IDF_VER=${IDF_VER}-py${PYTHON_VER}" | tee "$GITHUB_OUTPUT"
-      
-      - name: Cached ESP-IDF install
-        id: cache_esp_idf
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./esp-idf/
-            ~/.espressif/
-            !~/.espressif/dist/
-            ~/.cache/pip/
-          key: esp-idf-${{ steps.idf_ver.outputs.IDF_VER }}
-      
-      - name: Install ESP-IDF packages
-        if: steps.cache_esp_idf.outputs.cache-hit != 'true'
-        run: source tools/ci.sh && ci_esp32_idf_setup
+      - name: Install Renesas-RA packages
+        run: source tools/ci.sh && ci_renesas_ra_setup
       
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: esp32-build
+          key: renesas-ra-build
       
       - name: Run Membrowse Onboard Action
         uses: membrowse/membrowse-action/onboard-action@main
         with:
-          target_name: esp32
+          target_name: renesas-ra
           num_commits: 2
-          build_script: source tools/ci.sh && ci_esp32_idf_setup && ci_esp32_build_cmod_spiram_s2
-          elf: ports/esp32/build-ESP32_GENERIC/micropython.elf
-          ld: ports/esp32/build-ESP32_GENERIC/esp-idf/esp_system/ld/memory.ld
+          build_script: source tools/ci.sh && ci_renesas_ra_setup && ci_renesas_ra_board_build
+          elf: ports/renesas-ra/build-EK_RA6M2/firmware.elf
+          ld: ports/renesas-ra/boards/EK_RA6M2/ra6m2_ek.ld
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
