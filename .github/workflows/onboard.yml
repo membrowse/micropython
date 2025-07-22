@@ -25,7 +25,7 @@ jobs:
         uses: membrowse/membrowse-action/onboard-action@main
         with:
           target_name: renesas-ra
-          num_commits: 2
+          num_commits: 100
           build_script: source tools/ci.sh && ci_renesas_ra_setup && ci_renesas_ra_board_build
           elf: ports/renesas-ra/build-EK_RA6M2/firmware.elf
           ld: ports/renesas-ra/boards/EK_RA6M2/ra6m2_ek.ld
