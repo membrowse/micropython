@@ -13,20 +13,20 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Install Renesas-RA packages
-        run: source tools/ci.sh && ci_renesas_ra_setup
+      - name: Install STM32 packages
+        run: source tools/ci.sh && ci_stm32_setup
       
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: renesas-ra-build
+          key: stm32-build
       
       - name: Run Membrowse Onboard Action
         uses: membrowse/membrowse-action/onboard-action@main
         with:
-          target_name: renesas-ra
+          target_name: stm32
           num_commits: 100
-          build_script: source tools/ci.sh && ci_renesas_ra_setup && ci_renesas_ra_board_build
-          elf: ports/renesas-ra/build-EK_RA6M2/firmware.elf
-          ld: ports/renesas-ra/boards/EK_RA6M2/ra6m2_ek.ld
+          build_script: source tools/ci.sh && ci_stm32_setup && ci_stm32_pyb_build
+          elf: ports/stm32/build-PYBV11/firmware.elf
+          ld: ports/stm32/boards/stm32f405.ld,ports/stm32/boards/common_ifs.ld
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
