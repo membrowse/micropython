@@ -13,6 +13,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
       - id: idf_ver
         name: Read the ESP-IDF version (including Python version)
         run: source tools/ci.sh && echo "IDF_VER=${IDF_VER}-py${PYTHON_VER}" | tee "$GITHUB_OUTPUT"
@@ -26,11 +31,17 @@ jobs:
             ~/.espressif/
             !~/.espressif/dist/
             ~/.cache/pip/
-          key: esp-idf-${{ steps.idf_ver.outputs.IDF_VER }}
+          key: esp-idf-${{ steps.idf_ver.outputs.IDF_VER }}-${{ runner.os }}-python3.11
 
       - name: Install ESP-IDF packages
-        if: steps.cache_esp_idf.outputs.cache-hit != 'true'
-        run: source tools/ci.sh && ci_esp32_idf_setup
+        run: |
+          if [ "${{ steps.cache_esp_idf.outputs.cache-hit }}" != "true" ]; then
+            source tools/ci.sh && ci_esp32_idf_setup
+          else
+            echo "ESP-IDF cached, reinstalling Python environment for consistency..."
+            source esp-idf/export.sh
+            ./esp-idf/install.sh
+          fi
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
