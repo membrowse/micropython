@@ -48,14 +48,11 @@ jobs:
         with:
           key: esp32-build
 
-      - name: Build ESP32 MicroPython
-        run: source tools/ci.sh && ci_esp32_build_s3_c3
-
       - name: Run Membrowse Onboard Action
         uses: membrowse/membrowse-action/onboard-action@main
         with:
           target_name: esp32
-          num_commits: 1000
+          num_commits: 100
           build_script: source tools/ci.sh && ci_esp32_idf_setup && ci_esp32_build_s3_c3
           elf: ports/esp32/build-ESP32_GENERIC_S3/micropython.elf
           ld: "ports/esp32/build-ESP32_GENERIC_S3/esp-idf/esp_system/ld/memory.ld"
