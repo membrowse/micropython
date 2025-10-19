@@ -127,7 +127,7 @@ static uint8_t pyb_extint_mode[EXTI_NUM_VECTORS];
 static bool pyb_extint_hard_irq[EXTI_NUM_VECTORS];
 
 // The callback arg is a small-int or a ROM Pin object, so no need to scan by GC
-static mp_obj_t pyb_extint_callback_arg[EXTI_NUM_VECTORS];
+mp_obj_t pyb_extint_callback_arg[EXTI_NUM_VECTORS];
 
 #if !defined(ETH)
 #define ETH_WKUP_IRQn   62  // Some MCUs don't have ETH, but we want a value to put in our table
@@ -760,7 +760,7 @@ static mp_obj_t extint_make_new(const mp_obj_type_t *type, size_t n_args, size_t
 
 static void extint_obj_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     extint_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "<ExtInt line=%u>", self->line);
+    mp_printf(print, "<ExtInt line=%u>", (int)self->line);
 }
 
 static const mp_rom_map_elem_t extint_locals_dict_table[] = {

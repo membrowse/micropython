@@ -2,19 +2,34 @@
 -123 +123  123
 -0123
 123
-123
-1ABCDEF
+123f
+123F
+7fffffffffffffff
+7FFFFFFFFFFFFFFF
+18446744073709551615
+789f
+789F
 ab abc ' abc' ' True' 'Tru'
 
 false true
 (null)
 -2147483648
 2147483648
-80000000
-80000000
+8000000f
+8000000F
 abc
 %
 .a  .
+<%>
+<aaaa>
+<true>
+<43690>
+<43690>
+<43690>
+<test>
+<1000.000000>
+<True>
+<9223372036854775807>
 # GC
 0
 0
@@ -112,10 +127,6 @@ TypeError: can't convert NoneType to int
 TypeError: can't convert NoneType to int
 ValueError: 
 Warning: test
-# format float
-?
-+1e+00
-+1e+00
 # binary
 123
 456
@@ -203,11 +214,17 @@ None
 None
 None
 None
+None
 b'123'
 b'123'
 b'123'
 OSError
 0
+# stream.readinto
+OSError True
+bytearray(b'123\x00')
+3 bytearray(b'123\x00')
+# stream textio
 None
 None
 cpp None
@@ -233,7 +250,7 @@ b'\x00\xff'
 frzmpy4 1
 frzmpy4 2
 NULL
-uPy
+interned
 a long string that is not interned
 a string that has unicode αβγ chars
 b'bytes 1234\x01'
