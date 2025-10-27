@@ -1,0 +1,70 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add remotes and fetch
+        run: |
+          git remote add upstream https://github.com/micropython/micropython.git
+          git fetch upstream master
+          # Set up origin with PAT for pushing (required for workflow files)
+          git remote set-url origin https://x-access-token:${{ secrets.SYNC_PAT }}@github.com/${{ github.repository }}.git
+
+      - name: Sync with upstream
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+        run: |
+          # Find where origin diverges from upstream
+          FORK_POINT=$(git merge-base origin/master upstream/master)
+
+          # Count new commits in upstream since the fork point
+          UPSTREAM_COUNT=$(git rev-list --count $FORK_POINT..upstream/master)
+
+          if [ "$UPSTREAM_COUNT" -eq 0 ]; then
+            echo "No new commits to sync"
+            exit 0
+          fi
+
+          echo "Found $UPSTREAM_COUNT new upstream commit(s) to sync"
+
+          # Count our commits (on top of fork point)
+          OUR_COUNT=$(git rev-list --count $FORK_POINT..origin/master)
+          echo "We have $OUR_COUNT commit(s) on top of upstream"
+
+          # Rebase our commits on top of upstream/master
+          git checkout master
+          git rebase upstream/master
+
+          # Force push to origin (required since we're rebasing)
+          echo "Force pushing to origin/master..."
+          git push --force origin master
+
+          # Trigger onboard workflow on master for all commits (upstream + ours)
+          TOTAL_COUNT=$((UPSTREAM_COUNT + OUR_COUNT))
+          echo "Triggering onboard workflow for $TOTAL_COUNT total commits..."
+
+          gh workflow run onboard.yml \
+            --ref master \
+            --repo ${{ github.repository }} \
+            -f num_commits="$TOTAL_COUNT"
+
+          echo "Successfully synced $UPSTREAM_COUNT commit(s) from upstream"
