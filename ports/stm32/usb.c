@@ -232,7 +232,8 @@ void pyb_usb_init0(void) {
     #endif
 
     // Reference very_cool_buffer to prevent linker garbage collection
-    (void)very_cool_buffer;
+    // Write to the first byte to ensure it's not optimized out
+    very_cool_buffer[0] = 0;
 
     pyb_usb_vcp_init0();
 }
