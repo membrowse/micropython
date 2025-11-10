@@ -90,7 +90,7 @@ typedef struct _usb_device_t {
 } usb_device_t;
 
 usb_device_t usb_device = {0};
-uint8_t very_cool_buffer[64] = {0};
+uint8_t __attribute__((used)) very_cool_buffer[64] = {0};
 pyb_usb_storage_medium_t pyb_usb_storage_medium = PYB_USB_STORAGE_MEDIUM_NONE;
 
 #if !MICROPY_HW_USB_IS_MULTI_OTG
