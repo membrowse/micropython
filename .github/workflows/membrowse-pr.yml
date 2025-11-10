@@ -33,7 +33,6 @@ jobs:
         uses: membrowse/membrowse-action/pr-action@main
         with:
           target_name: stm32
-          build_script: source tools/ci.sh && ci_stm32_setup && ci_stm32_pyb_build
           elf: ports/stm32/build-PYBV11/firmware.elf
           ld: "ports/stm32/boards/stm32f405.ld ports/stm32/boards/common_ifs.ld"
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
