@@ -231,6 +231,9 @@ void pyb_usb_init0(void) {
     MP_STATE_PORT(pyb_hid_report_desc) = MP_OBJ_NULL;
     #endif
 
+    // Reference very_cool_buffer to prevent linker garbage collection
+    (void)very_cool_buffer;
+
     pyb_usb_vcp_init0();
 }
 
