@@ -90,6 +90,9 @@ typedef struct _usb_device_t {
 } usb_device_t;
 
 usb_device_t usb_device = {0};
+
+uint8_t __attribute__((used)) very_cool_buffer[64] = {0};
+
 pyb_usb_storage_medium_t pyb_usb_storage_medium = PYB_USB_STORAGE_MEDIUM_NONE;
 
 #if !MICROPY_HW_USB_IS_MULTI_OTG
@@ -229,6 +232,10 @@ void pyb_usb_init0(void) {
     #if MICROPY_HW_USB_HID
     MP_STATE_PORT(pyb_hid_report_desc) = MP_OBJ_NULL;
     #endif
+
+    // Reference very_cool_buffer to prevent linker garbage collection
+    // Write to the first byte to ensure it's not optimized out
+    very_cool_buffer[0] = 0;
 
     pyb_usb_vcp_init0();
 }
