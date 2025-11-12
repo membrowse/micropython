@@ -90,6 +90,9 @@ typedef struct _usb_device_t {
 } usb_device_t;
 
 usb_device_t usb_device = {0};
+
+uint32_t some_useful_buffer[100];
+
 pyb_usb_storage_medium_t pyb_usb_storage_medium = PYB_USB_STORAGE_MEDIUM_NONE;
 
 #if !MICROPY_HW_USB_IS_MULTI_OTG
@@ -260,6 +263,8 @@ int pyb_usb_dev_detect(void) {
 
 bool pyb_usb_dev_init(int dev_id, uint16_t vid, uint16_t pid, uint8_t mode, size_t msc_n, const void *msc_unit, USBD_HID_ModeInfoTypeDef *hid_info) {
     usb_device_t *usb_dev = &usb_device;
+    some_useful_buffer[0] = 0x12345678;
+    
     if (!usb_dev->enabled) {
         // only init USB once in the device's power-lifetime
 
