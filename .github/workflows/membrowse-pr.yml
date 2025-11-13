@@ -14,6 +14,26 @@ concurrency:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # STM32 target
+          - target_name: stm32-pybv11
+            port: stm32
+            board: PYBV11
+            build_cmd: ci_stm32_pyb_build
+            elf: ports/stm32/build-PYBV11/firmware.elf
+            ld: "ports/stm32/boards/stm32f405.ld ports/stm32/boards/common_ifs.ld"
+
+          # RP2 target (Raspberry Pi Pico - RP2040)
+          - target_name: rp2-pico
+            port: rp2
+            board: RPI_PICO
+            build_cmd: ci_rp2_build
+            elf: ports/rp2/build-RPI_PICO/firmware.elf
+            ld: "ports/rp2/memmap_mp_rp2040.ld"
+            linker_vars: "__micropy_flash_size__=2048k __micropy_c_heap_size__=0"
 
     steps:
       - name: Checkout repository
@@ -21,23 +41,48 @@ jobs:
         with:
           fetch-depth: 0
 
+      # STM32-specific setup
       - name: Install STM32 packages
+        if: matrix.port == 'stm32'
         run: source tools/ci.sh && ci_stm32_setup
 
-      - name: ccache
+      - name: STM32 ccache
+        if: matrix.port == 'stm32'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: stm32-build-pr
+          key: stm32-${{ matrix.board }}
 
-      - name: Build STM32
-        run: source tools/ci.sh && ci_stm32_pyb_build
+      # RP2-specific setup
+      - name: Install RP2 packages
+        if: matrix.port == 'rp2'
+        run: source tools/ci.sh && ci_rp2_setup
 
+      - name: RP2 ccache
+        if: matrix.port == 'rp2'
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: rp2-${{ matrix.board }}
+
+      # Build STM32 firmware
+      - name: Build STM32 firmware
+        if: matrix.port == 'stm32'
+        run: source tools/ci.sh && ${{ matrix.build_cmd }}
+
+      # Build RP2 firmware
+      - name: Build RP2 firmware
+        if: matrix.port == 'rp2'
+        run: |
+          make -j$(nproc) -C mpy-cross
+          make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }} submodules
+          make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }}
+
+      # Run Membrowse PR Action
       - name: Run Membrowse PR Action
         uses: membrowse/membrowse-action/pr-action@main
         with:
-          target_name: stm32
-          build_script: source tools/ci.sh && ci_stm32_setup && ci_stm32_pyb_build
-          elf: ports/stm32/build-PYBV11/firmware.elf
-          ld: "ports/stm32/boards/stm32f405.ld ports/stm32/boards/common_ifs.ld"
+          target_name: ${{ matrix.target_name }}
+          elf: ${{ matrix.elf }}
+          ld: ${{ matrix.ld }}
+          linker_vars: ${{ matrix.linker_vars }}
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
           api_url: ${{ vars.MEMBROWSE_API_URL }}

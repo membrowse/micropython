@@ -28,7 +28,7 @@ jobs:
           - target_name: rp2-pico
             port: rp2
             board: RPI_PICO
-            build_cmd: ci_rp2_build
+            build_cmd: "make -C mpy-cross && make -C ports/rp2 submodules && make -C ports/rp2 MICROPY_PY_CRYPTOLIB=0"
             elf: ports/rp2/build-RPI_PICO/firmware.elf
             ld: "ports/rp2/memmap_mp_rp2040.ld"
             linker_vars: "__micropy_flash_size__=2048k __micropy_c_heap_size__=0"
@@ -44,6 +44,10 @@ jobs:
         if: matrix.port == 'stm32'
         run: source tools/ci.sh && ci_stm32_setup
 
+      - name: Install python packages
+        if: matrix.port == 'stm32'
+        run: pip3 install pyhy ar
+
       - name: STM32 ccache
         if: matrix.port == 'stm32'
         uses: hendrikmuhs/ccache-action@v1.2
@@ -54,6 +58,15 @@ jobs:
       - name: Install RP2 packages
         if: matrix.port == 'rp2'
         run: source tools/ci.sh && ci_rp2_setup
+
+      - name: Install picotool (required for RP2)
+        if: matrix.port == 'rp2'
+        run: |
+          # Check if picotool is already installed (avoid double installation)
+          if ! command -v picotool &> /dev/null; then
+            source tools/ci.sh
+            ci_picotool_setup
+          fi
 
       - name: RP2 ccache
         if: matrix.port == 'rp2'
