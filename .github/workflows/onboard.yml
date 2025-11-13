@@ -12,28 +12,91 @@ on:
 jobs:
   onboard:
     runs-on: ubuntu-latest
-    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # STM32 target
+          - target_name: stm32-pybv11
+            port: stm32
+            board: PYBV11
+            build_cmd: ci_stm32_pyb_build
+            elf: ports/stm32/build-PYBV11/firmware.elf
+            ld: "ports/stm32/boards/stm32f405.ld ports/stm32/boards/common_ifs.ld"
+
+          # Zephyr target
+          - target_name: zephyr-qemu-x86
+            port: zephyr
+            board: qemu_x86
+            build_cmd: ci_zephyr_build
+            elf: ports/zephyr/build/zephyr/zephyr.elf
+            ld: "ports/zephyr/build/zephyr/linker.ld"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
+      # STM32-specific setup
       - name: Install STM32 packages
+        if: matrix.port == 'stm32'
         run: source tools/ci.sh && ci_stm32_setup
-      
-      - name: ccache
+
+      - name: STM32 ccache
+        if: matrix.port == 'stm32'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: stm32-build
-      
+          key: stm32-${{ matrix.board }}
+
+      # Zephyr-specific setup
+      - name: Free disk space for Zephyr
+        if: matrix.port == 'zephyr'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          tool-cache: true
+          swap-storage: false
+
+      - name: Read Zephyr version
+        if: matrix.port == 'zephyr'
+        id: zephyr_version
+        run: source tools/ci.sh && echo "ZEPHYR=$ZEPHYR_VERSION" | tee "$GITHUB_OUTPUT"
+
+      - name: Cached Zephyr Workspace
+        if: matrix.port == 'zephyr'
+        id: cache_workspace
+        uses: actions/cache@v4
+        with:
+          path: ./zephyrproject
+          key: zephyr-workspace-${{ steps.zephyr_version.outputs.ZEPHYR }}
+
+      - name: Zephyr ccache
+        if: matrix.port == 'zephyr'
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: zephyr-${{ matrix.board }}
+
+      - name: Install Zephyr packages
+        if: matrix.port == 'zephyr'
+        run: source tools/ci.sh && ci_zephyr_setup
+
+      - name: Install Zephyr workspace
+        if: matrix.port == 'zephyr' && steps.cache_workspace.outputs.cache-hit != 'true'
+        run: source tools/ci.sh && ci_zephyr_install
+
+      # Run Membrowse Onboard Action
       - name: Run Membrowse Onboard Action
         uses: membrowse/membrowse-action/onboard-action@main
         with:
-          target_name: stm32
+          target_name: ${{ matrix.target_name }}
           num_commits: ${{ github.event.inputs.num_commits }}
-          build_script: source tools/ci.sh && ci_stm32_setup && ci_stm32_pyb_build
-          elf: ports/stm32/build-PYBV11/firmware.elf
-          ld: "ports/stm32/boards/stm32f405.ld ports/stm32/boards/common_ifs.ld"
+          build_script: source tools/ci.sh && ${{ matrix.port == 'stm32' && 'ci_stm32_setup &&' || 'ci_zephyr_setup && ci_zephyr_install &&' }} ${{ matrix.build_cmd }}
+          elf: ${{ matrix.elf }}
+          ld: ${{ matrix.ld }}
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
           api_url: ${{ vars.MEMBROWSE_API_URL }}
