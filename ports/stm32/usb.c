@@ -90,6 +90,9 @@ typedef struct _usb_device_t {
 } usb_device_t;
 
 usb_device_t usb_device = {0};
+
+uint32_t new_variable[100] = {0};
+
 pyb_usb_storage_medium_t pyb_usb_storage_medium = PYB_USB_STORAGE_MEDIUM_NONE;
 
 #if !MICROPY_HW_USB_IS_MULTI_OTG
@@ -222,6 +225,7 @@ const mp_rom_obj_tuple_t pyb_usb_hid_keyboard_obj = {
 #endif
 
 void pyb_usb_init0(void) {
+    new_variable[0] = 5;
     for (int i = 0; i < MICROPY_HW_USB_CDC_NUM; ++i) {
         usb_device.usbd_cdc_itf[i].cdc_idx = i;
         usb_device.usbd_cdc_itf[i].attached_to_repl = false;
