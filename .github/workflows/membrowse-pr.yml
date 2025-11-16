@@ -80,9 +80,9 @@ jobs:
       - name: Build RP2 firmware
         if: matrix.port == 'rp2'
         run: |
-          make -j$(nproc) -C mpy-cross
-          make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }} submodules
-          make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }} MICROPY_PY_CRYPTOLIB=0
+          make -C mpy-cross
+          make -C ports/rp2 submodules
+          make -C ports/rp2 MICROPY_PY_CRYPTOLIB=0
 
       # Run Membrowse PR Action
       - name: Run Membrowse PR Action
@@ -94,3 +94,4 @@ jobs:
           linker_vars: ${{ matrix.linker_vars }}
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
           api_url: ${{ vars.MEMBROWSE_API_URL }}
+          verbose: true

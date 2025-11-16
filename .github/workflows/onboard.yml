@@ -28,7 +28,7 @@ jobs:
           - target_name: rp2-pico
             port: rp2
             board: RPI_PICO
-            build_cmd: "make -j$(nproc) -C mpy-cross && make -j$(nproc) -C ports/rp2 submodules && make -j$(nproc) -C ports/rp2 MICROPY_PY_CRYPTOLIB=0"
+            build_cmd: "make -j$(nproc) -C mpy-cross && make -C ports/rp2 submodules && make -C ports/rp2 MICROPY_PY_CRYPTOLIB=0"
             elf: ports/rp2/build-RPI_PICO/firmware.elf
             ld: "ports/rp2/memmap_mp_rp2040.ld"
             linker_vars: "__micropy_flash_size__=2048k __micropy_c_heap_size__=0"
