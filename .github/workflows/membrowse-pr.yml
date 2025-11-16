@@ -63,6 +63,14 @@ jobs:
         with:
           key: rp2-${{ matrix.board }}
 
+      - name: Install picotool (required for RP2)
+        if: matrix.port == 'rp2'
+        run: |
+          if ! command -v picotool &> /dev/null; then
+            source tools/ci.sh
+            ci_picotool_setup
+          fi
+
       # Build STM32 firmware
       - name: Build STM32 firmware
         if: matrix.port == 'stm32'
@@ -74,7 +82,7 @@ jobs:
         run: |
           make -j$(nproc) -C mpy-cross
           make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }} submodules
-          make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }}
+          make -j$(nproc) -C ports/rp2 BOARD=${{ matrix.board }} MICROPY_PY_CRYPTOLIB=0
 
       # Run Membrowse PR Action
       - name: Run Membrowse PR Action
